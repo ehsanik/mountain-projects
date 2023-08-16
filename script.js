@@ -1,12 +1,18 @@
 function checkAnswer() {
-    const answer = document.getElementById('answer').value;
+    const overnight = document.getElementById('overnight').value;
+    const rock = document.getElementById('rock').value;
     const result = document.getElementById('result');
 
-    if (answer === "paris") {
-        result.textContent = "Correct!";
-    } else {
-        result.textContent = "Wrong. Try again!";
+    let pack_list = [];
+
+    if (overnight === "yes") {
+        pack_list = pack_list.concat(["Tent"]);
     }
+    if (rock == "yes") {
+        pack_list = pack_list.concat(["Harness"]);
+    }
+
+    result.textContent = pack_list.join("\n");
 }
 
 
