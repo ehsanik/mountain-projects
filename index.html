@@ -1,59 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Website</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mountain Form</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: url('mountain.jpg') no-repeat center center fixed;
+    background-size: cover;
+  }
+
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .form_kiana {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-height: 100vh; /* Limit the maximum height of the form */
+    overflow: auto;   /* Add a scrollbar if content overflows */
+  }
+
+  .form_kiana input[type="text"] {
+    padding: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+
+  .form_kiana button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .form_kiana button:hover {
+    background-color: #0056b3;
+  }
+  #result {
+    text-align: left;
+    margin-top: 20px; /* Add some spacing between form and result */
+}
+</style>
 </head>
 <body>
-    <!-- Your HTML content here -->
-    <script src="script.js"></script>
-    <h1>What I you pack?</h1>
-    <p>Is this an overnight trip?</p>
-    <select id="overnight">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <p>Are you going to rock climb?</p>
-    <select id="rock">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <p>Are you going to ice climb?</p>
-    <select id="ice">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <p>Are you going to cross glaciers?</p>
-    <select id="glacier">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <p>Do you have snow to cross?</p>
-    <select id="snow">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <p>Are you planning to sport climb?</p>
-    <select id="sport_climb">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <p>Do you have deep snow on this trip?</p>
-    <select id="deep_snow">
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
-    </select>
-    <p>What's your gender?</p>
-    <select id="gender">
-        <option value="female">Female</option>
-        <option value="male">Male</option>
-        <option value="non-binary">Non Binary</option>
-    </select>
-    <p><button onclick="checkAnswer()">Submit</button></p>
-    <p id="result"></p>
+<div class="container">
+  <div class="form_kiana">
 
+    <h2>What Should I pack?</h2>
+
+    <form id="questions">
+      <script src="script.js"></script>
+      <p>Is this an overnight trip?</p>
+      <select id="overnight">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>Are you going to rock climb?</p>
+      <select id="rock">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>Are you going to ice climb?</p>
+      <select id="ice">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>Are you going to cross glaciers?</p>
+      <select id="glacier">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>Do you have snow to cross?</p>
+      <select id="snow">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>Are you skiing?</p>
+      <select id="ski">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>Do you have deep snow on this trip?</p>
+      <select id="deep_snow">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>Are there wildlife on this trip?</p>
+      <select id="bear">
+          <option value="no">No</option>
+          <option value="yes">Yes</option>
+      </select>
+      <p>What's your gender?</p>
+      <select id="gender">
+          <option value="female">Female</option>
+          <option value="male">Male</option>
+          <option value="non-binary">Non Binary</option>
+      </select>
+
+      <p><button onclick="checkAnswer(event)">Let's Go!</button></p>
+
+
+<!--      <input type="text" placeholder="Your Name">-->
+<!--      <input type="text" placeholder="Email">-->
+<!--      <textarea placeholder="Message"></textarea>-->
+<!--      <button type="submit">Submit</button>-->
+    </form>
+      <p id="result"  style="text-align: left;"></p>
+
+  </div>
+
+</div>
 </body>
 </html>
-
