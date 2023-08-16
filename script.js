@@ -47,7 +47,7 @@ function checkAnswer(event) {
         ski: avy_gear.concat(["Crampons", "Helmet", "Ski Pack", "Ski Crampons", "Ski Boots", "Skis", "Poles", "Skins", "Skin Wax", "Snow Pants", "Gloves", "Goggles", "Tarp", "Ski Cords"]),
         deep_snow: avy_gear.concat(["Gaiters", "Snowshoes", "Crampons"]),
     };
-    let pack_list = packing_list_dict.essentials.concat(packing_list_dict.clothes);
+    let pack_list = []
 
     if (overnight === "yes") {
         pack_list = pack_list.concat(packing_list_dict.overnight);
@@ -67,15 +67,17 @@ function checkAnswer(event) {
     if (glacier === "yes") {
         pack_list = pack_list.concat(packing_list_dict.glacier);
     }
-    if (bear === "yes") {
-        pack_list = pack_list.concat(packing_list_dict.bear);
-    }
     if (snow === "yes") {
         pack_list = pack_list.concat(packing_list_dict.snow);
+    }
+    if (bear === "yes") {
+        pack_list = pack_list.concat(packing_list_dict.bear);
     }
     if (gender === "female") {
         pack_list = pack_list.concat(packing_list_dict.girl);
     }
+
+    pack_list = pack_list.concat(packing_list_dict.essentials).concat(packing_list_dict.clothes);
 
     const unique_pack_list = [...new Set(pack_list)]
 
