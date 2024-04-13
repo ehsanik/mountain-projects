@@ -37,7 +37,7 @@ function checkAnswer(event) {
         clothes:["Underwear", "Sun-blocking Shirt", "Clean Clothes for the ride", "Quick Dry Pants", "Fleece", "Socks (and extra)", "Rain Pants", "Rain Jacket", "Puffy", "Gloves", "Hat and/or Buff"],
       essentials: ["Backpack", "Map (Phone or Physical)", "Headlamp", "Compass/GPS/Phone", "inReach", "Proper Shoes or Boots", "Water Containers", "Water Filter", "Meals", "Energy bars / Gels / Snacks", "Toilet Paper", "Medication", "Sunglasses", "Sunscreen / Lip Balm", "Sun Hat", "Knife", "First Aid Kit", "Duct Tape", "Lighter", "Emergency Bivy", "Extra Batteries"],
       optionals: ["Poles", "Bug Spray", "Watch", "Sandals", "Permits"],
-      overnight: ["Tent", "Tent Footprint", "Sleeping Bag", "Sleeping Pad", "Pillow", "Stove", "Fuel", "Cookset", "Bowl/Utensil/Mug", "Tooth Brush", "Lighter"],
+      overnight: ["Tent", "Tent Footprint", "Sleeping Bag", "Sleeping Pad", "Pillow", "Stove", "Fuel", "Cookset", "Bowl/Utensil/Mug", "Tooth Brush", "Lighter", "Camp Chair"],
       rock: rescue_gear.concat(["Harness", "Helmet", "Radios", "Rope", "Nuts", "Cams", "Alpine Draws", "Nut Tool", "Gear Sling", "Runners", "Quick Draws", "Chalk and Chalk Bag", "Rock Shoes", "Belay and Crack Gloves"]),
         glacier: glacier_gear,
         snow: ["Gaiters", "Blue Bag", "Crampons", "Ice Ax", "Helmet",],
