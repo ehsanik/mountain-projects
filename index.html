@@ -7,153 +7,563 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-92RPHGQKXC');
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checklist Generator</title>
+<title>Mountain Pack List Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
-
-  .button {
-    display: inline-block;
-    background-color: #ff6b6b;
-    color: white;
-    padding: 0px 20px;
-    border-radius: 20px;
-    font-size: 16px;
-    text-decoration: none;
-    transition: background-color 0.3s ease-in-out;
+  *, *::before, *::after {
+    box-sizing: border-box;
   }
 
-  .button:hover {
-    background-color: #e04f4f;
-  }
   body {
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background: url('mountain.jpg') no-repeat center center fixed;
     background-size: cover;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(30, 58, 95, 0.55));
+    z-index: 0;
   }
 
   .container {
+    position: relative;
+    z-index: 1;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 40px 20px;
   }
 
-  .form_kiana {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    max-height: 100vh; /* Limit the maximum height of the form */
-    overflow: auto;   /* Add a scrollbar if content overflows */
-  }
-
-  .form_kiana input[type="text"] {
-    padding: 10px;
+  .card {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    box-shadow:
+      0 4px 6px rgba(0, 0, 0, 0.07),
+      0 20px 60px rgba(0, 0, 0, 0.15);
+    padding: 40px 36px;
+    max-width: 520px;
     width: 100%;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    animation: slideUp 0.5s ease-out;
   }
 
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-  .form_kiana button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .card-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .card-header .icon {
+    font-size: 40px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .card-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+  }
+
+  .card-header p {
+    color: #64748b;
+    font-size: 14px;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  /* Question rows */
+  .question-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .question-row:last-of-type {
+    border-bottom: none;
+  }
+
+  .question-label {
+    font-size: 14.5px;
+    color: #334155;
+    font-weight: 500;
+    flex: 1;
+    padding-right: 16px;
+  }
+
+  .question-label .q-icon {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+
+  /* Toggle switch */
+  .toggle-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .toggle-wrap select {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle {
+    width: 48px;
+    height: 26px;
+    background: #cbd5e1;
+    border-radius: 999px;
     cursor: pointer;
+    transition: background 0.25s ease;
+    position: relative;
+    display: block;
   }
 
-  .form_kiana button:hover {
-    background-color: #0056b3;
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s ease;
   }
+
+  .toggle.active {
+    background: #2d8a4e;
+  }
+
+  .toggle.active::after {
+    transform: translateX(22px);
+  }
+
+  /* Gender select styling */
+  .select-styled {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 8px 36px 8px 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: #334155;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8.825a.5.5 0 0 1-.354-.146l-4-4a.5.5 0 0 1 .708-.708L6 7.617l3.646-3.646a.5.5 0 0 1 .708.708l-4 4A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    min-width: 130px;
+  }
+
+  .select-styled:hover {
+    border-color: #94a3b8;
+  }
+
+  .select-styled:focus {
+    outline: none;
+    border-color: #2d8a4e;
+    box-shadow: 0 0 0 3px rgba(45, 138, 78, 0.15);
+  }
+
+  /* Submit button */
+  .btn-generate {
+    display: block;
+    width: 100%;
+    padding: 14px 24px;
+    margin-top: 28px;
+    background: linear-gradient(135deg, #2d8a4e, #22763f);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 8px rgba(45, 138, 78, 0.3);
+  }
+
+  .btn-generate:hover {
+    background: linear-gradient(135deg, #22763f, #1a5c31);
+    box-shadow: 0 4px 16px rgba(45, 138, 78, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn-generate:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(45, 138, 78, 0.3);
+  }
+
+  /* Feedback link */
+  .feedback-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #f8fafc;
+    color: #64748b;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    border: 1.5px solid #e2e8f0;
+    transition: all 0.2s ease;
+  }
+
+  .feedback-link:hover {
+    background: #f1f5f9;
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+
+  .footer {
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ---- Result Styles ---- */
   #result {
     text-align: left;
-    margin-top: 20px; /* Add some spacing between form and result */
-}
+    animation: fadeIn 0.4s ease;
+  }
+
+  .result-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .result-header h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+  }
+
+  .result-header p {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0;
+  }
+
+  .progress-bar-container {
+    background: #e2e8f0;
+    border-radius: 999px;
+    height: 8px;
+    margin: 16px 0 24px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #2d8a4e, #4ade80);
+    border-radius: 999px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: -8px;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+  .category-section {
+    margin-bottom: 20px;
+  }
+
+  .category-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    margin: 0 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #f1f5f9;
+  }
+
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .checklist li {
+    margin: 0;
+  }
+
+  .checklist label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-size: 14px;
+    color: #334155;
+    font-weight: 400;
+  }
+
+  .checklist label:hover {
+    background: #f8fafc;
+  }
+
+  .checklist input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    background: white;
+  }
+
+  .checklist input[type="checkbox"]:checked {
+    background: #2d8a4e;
+    border-color: #2d8a4e;
+  }
+
+  .checklist input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .checklist input[type="checkbox"]:checked + .item-text {
+    color: #94a3b8;
+    text-decoration: line-through;
+  }
+
+  .item-text {
+    transition: all 0.2s ease;
+  }
+
+  .btn-reset {
+    display: block;
+    width: 100%;
+    padding: 12px 24px;
+    margin-top: 20px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+
+  .btn-reset:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+  }
+
+  .optionals-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .optionals-toggle:hover {
+    background: #f1f5f9;
+  }
+
+  .optionals-toggle .arrow {
+    transition: transform 0.25s ease;
+    font-size: 12px;
+  }
+
+  .optionals-toggle.open .arrow {
+    transform: rotate(180deg);
+  }
+
+  .optionals-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+
+  .optionals-content.open {
+    max-height: 500px;
+  }
+
+  /* Responsive */
+  @media (max-width: 540px) {
+    .card {
+      padding: 28px 20px;
+      border-radius: 16px;
+    }
+
+    .card-header h1 {
+      font-size: 24px;
+    }
+
+    .question-label {
+      font-size: 13.5px;
+    }
+  }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="form_kiana">
+  <div class="card">
 
-    <h2>What Should I pack?</h2>
+    <div class="card-header">
+      <span class="icon">&#9968;</span>
+      <h1>What Should I Pack?</h1>
+      <p>Answer a few questions and get a custom gear list</p>
+    </div>
 
     <form id="questions">
       <script src="script.js"></script>
-      <p>Is this an overnight trip?</p>
-      <select id="overnight">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>Are you going to rock climb?</p>
-      <select id="rock">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>Are you going to ice climb?</p>
-      <select id="ice">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>Are you going to cross glaciers?</p>
-      <select id="glacier">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>Do you have snow to cross?</p>
-      <select id="snow">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>Are you skiing?</p>
-      <select id="ski">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>Do you have deep snow on this trip?</p>
-      <select id="deep_snow">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>Are there wildlife on this trip?</p>
-      <select id="bear">
-          <option value="no">No</option>
-          <option value="yes">Yes</option>
-      </select>
-      <p>What's your gender?</p>
-      <select id="gender">
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#9978;</span> Overnight trip?</span>
+        <div class="toggle-wrap">
+          <select id="overnight"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="overnight" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#129495;</span> Rock climbing?</span>
+        <div class="toggle-wrap">
+          <select id="rock"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="rock" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#10052;</span> Ice climbing?</span>
+        <div class="toggle-wrap">
+          <select id="ice"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="ice" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#127956;</span> Crossing glaciers?</span>
+        <div class="toggle-wrap">
+          <select id="glacier"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="glacier" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#9731;</span> Snow crossings?</span>
+        <div class="toggle-wrap">
+          <select id="snow"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="snow" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#9975;</span> Skiing?</span>
+        <div class="toggle-wrap">
+          <select id="ski"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="ski" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#127784;</span> Deep snow?</span>
+        <div class="toggle-wrap">
+          <select id="deep_snow"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="deep_snow" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#128059;</span> Wildlife concerns?</span>
+        <div class="toggle-wrap">
+          <select id="bear"><option value="no">No</option><option value="yes">Yes</option></select>
+          <span class="toggle" data-select="bear" onclick="toggleSwitch(this)"></span>
+        </div>
+      </div>
+
+      <div class="question-row">
+        <span class="question-label"><span class="q-icon">&#128100;</span> Gender</span>
+        <select id="gender" class="select-styled">
           <option value="female">Female</option>
           <option value="male">Male</option>
           <option value="non-binary">Non Binary</option>
-      </select>
+        </select>
+      </div>
 
-      <p><button onclick="checkAnswer(event)">Let's Go!</button></p>
-
-
-<!--      <input type="text" placeholder="Your Name">-->
-<!--      <input type="text" placeholder="Email">-->
-<!--      <textarea placeholder="Message"></textarea>-->
-<!--      <button type="submit">Submit</button>-->
+      <button type="submit" class="btn-generate" onclick="checkAnswer(event)">Generate My Pack List</button>
     </form>
-      <p id="result"  style="text-align: left;"></p>
 
-      <a href="feedback.html" class="button">Give Feedback!</a>
+    <div id="result"></div>
+
+    <div class="footer">
+      <a href="feedback.html" class="feedback-link">&#9993; Give Feedback</a>
+    </div>
   </div>
-
-
-
-
-
-
 </div>
 </body>
 </html>
