@@ -58,7 +58,7 @@ function checkAnswer(event) {
         rock: rescue_gear.concat(["Harness", "Helmet", "Radios", "Rope", "Nuts", "Cams", "Alpine Draws", "Nut Tool", "Gear Sling", "Runners", "Quick Draws", "Chalk and Chalk Bag", "Rock Shoes", "Belay and Crack Gloves"]),
         glacier: glacier_gear,
         snow: ["Gaiters", "Blue Bag", "Crampons", "Ice Ax", "Helmet"],
-        ice: glacier_gear.concat(["Harness", "Helmet", "Ice Screws", "Radios", "Crampons", "Ice Tools"]),
+        ice: glacier_gear.concat(["Harness", "Helmet", "Ice Screws", "Radios", "Crampons", "Ice Tools", "Alpine Draws"]),
         girl: ["Sport Bra", "Pad / Tampon / Menstural Cup", "Pee Funnel"],
         bear: ["Bear Canister / Ursack", "Bear Spray"],
         ski: avy_gear.concat(["Crampons", "Helmet", "Ski Pack", "Ski Crampons", "Ski Boots", "Skis", "Poles", "Skins", "Skin Wax", "Snow Pants", "Gloves", "Goggles", "Tarp", "Ski Cords", "Ski Leash", "Radios"]),
