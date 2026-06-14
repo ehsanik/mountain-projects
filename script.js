@@ -55,7 +55,7 @@ function checkAnswer(event) {
         essentials: ["Backpack", "Map (Phone or Physical)", "Headlamp", "Compass/GPS/Phone", "inReach", "Proper Shoes or Boots", "Water Containers", "Water Filter", "Meals", "Energy bars / Gels / Snacks", "Toilet Paper", "Medication", "Sunglasses", "Sunscreen / Lip Balm", "Sun Hat", "Knife", "First Aid Kit", "Duct Tape", "Lighter", "Emergency Bivy", "Extra Batteries"],
         optionals: ["Poles", "Bug Spray", "Watch", "Sandals", "Permits", "Power Bank and Phone Chargers", "Phone Leash", "Starlink"],
         overnight: ["Tent", "Tent Footprint", "Sleeping Bag", "Sleeping Pad", "Pillow", "Stove", "Fuel", "Cookset", "Bowl/Utensil/Mug", "Tooth Brush", "Lighter", "Camp Chair"],
-        rock: rescue_gear.concat(["Harness", "Helmet", "Radios", "Rope", "Nuts", "Cams", "Alpine Draws", "Nut Tool", "Gear Sling", "Runners", "Quick Draws", "Chalk and Chalk Bag", "Rock Shoes", "Belay and Crack Gloves"]),
+        rock: rescue_gear.concat(["Harness", "Helmet", "Radios", "Rope", "Nuts", "Cams", "Alpine Draws", "Nut Tool", "Gear Sling", "Runners", "Quick Draws", "Chalk and Chalk Bag", "Rock Shoes", "Belay and Crack Gloves", "Water Bottle for Harness", "Multipitch Pack"]),
         glacier: glacier_gear,
         snow: ["Gaiters", "Blue Bag", "Crampons", "Ice Ax", "Helmet"],
         ice: glacier_gear.concat(["Harness", "Helmet", "Ice Screws", "Radios", "Crampons", "Ice Tools", "Alpine Draws"]),
