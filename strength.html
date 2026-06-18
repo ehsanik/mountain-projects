@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strength Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: url('mountain.jpg') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(30, 58, 95, 0.55));
+    z-index: 0;
+  }
+  .container {
+    position: relative; z-index: 1;
+    display: flex; justify-content: center; align-items: flex-start;
+    min-height: 100vh; padding: 40px 20px;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07), 0 20px 60px rgba(0,0,0,0.15);
+    padding: 36px 32px; max-width: 560px; width: 100%;
+    animation: slideUp 0.5s ease-out;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .card-header { text-align: center; margin-bottom: 24px; }
+  .card-header .icon { font-size: 40px; margin-bottom: 8px; display: block; }
+  .card-header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px; font-weight: 700; color: #1e293b;
+    margin: 0 0 6px 0; letter-spacing: -0.5px;
+  }
+  .card-header p { color: #64748b; font-size: 14px; margin: 0; }
+
+  label.field-label {
+    display: block; font-size: 13px; font-weight: 600; color: #475569;
+    margin: 0 0 6px 2px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  input[type=text], input[type=email], input[type=password],
+  input[type=number], input[type=datetime-local], textarea, select.select-styled {
+    width: 100%; appearance: none; -webkit-appearance: none;
+    background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
+    padding: 11px 12px; font-size: 15px; font-family: 'Inter', sans-serif;
+    color: #1e293b; font-weight: 500; transition: all 0.2s ease;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: #2d8a4e; box-shadow: 0 0 0 3px rgba(45,138,78,0.15);
+  }
+  select.select-styled {
+    cursor: pointer; padding-right: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8.825a.5.5 0 0 1-.354-.146l-4-4a.5.5 0 0 1 .708-.708L6 7.617l3.646-3.646a.5.5 0 0 1 .708.708l-4 4A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+
+  .btn {
+    display: block; width: 100%; padding: 13px 24px;
+    background: linear-gradient(135deg, #2d8a4e, #22763f); color: white;
+    border: none; border-radius: 12px; font-size: 15px; font-weight: 600;
+    font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.25s ease;
+    letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(45,138,78,0.3);
+  }
+  .btn:hover { background: linear-gradient(135deg, #22763f, #1a5c31); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+  .btn-secondary {
+    background: #f1f5f9; color: #475569; border: 1.5px solid #e2e8f0; box-shadow: none;
+  }
+  .btn-secondary:hover { background: #e2e8f0; transform: none; }
+  .btn-ghost {
+    width: auto; display: inline-block; padding: 8px 14px; font-size: 13px;
+    background: #f1f5f9; color: #475569; border: 1.5px solid #e2e8f0; box-shadow: none;
+    border-radius: 9px;
+  }
+  .btn-ghost:hover { background: #e2e8f0; transform: none; }
+
+  .row { margin-bottom: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+  .grid-3 .field-label { display: none; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; margin-bottom: 22px; background: #f1f5f9; padding: 5px; border-radius: 12px; }
+  .tab {
+    flex: 1; text-align: center; padding: 9px 8px; border-radius: 8px; cursor: pointer;
+    font-size: 13.5px; font-weight: 600; color: #64748b; transition: all 0.2s ease; user-select: none;
+  }
+  .tab.active { background: white; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* Stars */
+  .stars { display: flex; gap: 6px; }
+  .star {
+    font-size: 30px; line-height: 1; cursor: pointer; color: #cbd5e1; transition: color 0.15s ease;
+  }
+  .star.on { color: #f59e0b; }
+
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .topbar .who { font-size: 12.5px; color: #94a3b8; }
+
+  .set-row { position: relative; }
+  .set-row .remove {
+    position: absolute; top: -8px; right: -8px; width: 22px; height: 22px;
+    border-radius: 50%; border: none; background: #ef4444; color: white; cursor: pointer;
+    font-size: 14px; line-height: 1; display: none;
+  }
+  .set-block { border: 1.5px solid #f1f5f9; border-radius: 12px; padding: 12px; margin-bottom: 10px; position: relative; }
+  .set-block .remove {
+    position: absolute; top: 8px; right: 8px; width: 24px; height: 24px;
+    border-radius: 50%; border: none; background: #fee2e2; color: #b91c1c; cursor: pointer;
+    font-size: 15px; line-height: 1; font-weight: 700;
+  }
+
+  .session-card {
+    border: 1.5px solid #f1f5f9; border-radius: 14px; padding: 16px; margin-bottom: 14px;
+    animation: fadeIn 0.3s ease;
+  }
+  .session-card .sc-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .session-card .sc-date { font-size: 14px; font-weight: 700; color: #1e293b; }
+  .session-card .sc-time { font-size: 12px; color: #94a3b8; font-weight: 500; }
+  .session-card .sc-rating { color: #f59e0b; font-size: 14px; letter-spacing: 1px; }
+  .session-card .sc-notes { font-size: 13px; color: #64748b; font-style: italic; margin: 6px 0 8px; }
+  .ex-line { display: flex; justify-content: space-between; font-size: 14px; padding: 4px 0; border-top: 1px solid #f8fafc; }
+  .ex-line .ex-name { color: #334155; font-weight: 500; }
+  .ex-line .ex-detail { color: #64748b; }
+
+  .hist-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .hist-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; padding: 8px 6px; border-bottom: 2px solid #f1f5f9; }
+  .hist-table td { padding: 9px 6px; border-bottom: 1px solid #f8fafc; color: #334155; }
+  .hist-table td.num { font-variant-numeric: tabular-nums; }
+  .pr-badge { display: inline-block; background: #dcfce7; color: #15803d; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+
+  .empty { text-align: center; color: #94a3b8; font-size: 14px; padding: 30px 10px; }
+  .muted { color: #94a3b8; font-size: 12.5px; }
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: white; padding: 11px 20px; border-radius: 10px;
+    font-size: 14px; z-index: 50; opacity: 0; transition: opacity 0.25s ease; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .err { color: #b91c1c; font-size: 13px; margin-top: 10px; text-align: center; min-height: 18px; }
+  .stat-strip { display: flex; gap: 10px; margin: 4px 0 16px; }
+  .stat { flex: 1; background: #f8fafc; border-radius: 12px; padding: 12px; text-align: center; }
+  .stat .v { font-size: 20px; font-weight: 700; color: #1e293b; }
+  .stat .k { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+  .add-link { background: none; border: none; color: #2d8a4e; font-weight: 600; font-size: 13.5px; cursor: pointer; padding: 4px 0; font-family: inherit; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 560px) {
+    .card { padding: 26px 18px; border-radius: 16px; }
+    .card-header h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+
+    <div class="card-header">
+      <span class="icon">&#127947;</span>
+      <h1>Strength Log</h1>
+      <p id="subtitle">Track every lift, every session</p>
+    </div>
+
+    <!-- SETUP NEEDED -->
+    <div id="view-setup" class="hidden">
+      <div class="empty" style="text-align:left">
+        <p style="font-weight:600;color:#1e293b;font-size:15px">Almost there — one setup step.</p>
+        <p>This app needs a free Supabase project to store your logs. Open
+          <code>strength-config.js</code> and paste in your Supabase
+          <b>URL</b> and <b>anon key</b> (Project Settings → API), then run
+          <code>strength-schema.sql</code> in the Supabase SQL editor.</p>
+        <p class="muted">See <code>STRENGTH_SETUP.md</code> for the full 3-step guide.</p>
+      </div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="view-auth" class="hidden">
+      <div class="row">
+        <label class="field-label" for="email">Email</label>
+        <input type="email" id="email" autocomplete="username" placeholder="you@example.com">
+      </div>
+      <div class="row">
+        <label class="field-label" for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button class="btn" id="btn-login">Sign In</button>
+      <div class="err" id="auth-err"></div>
+      <p style="text-align:center;margin:14px 0 0">
+        <button class="add-link" id="toggle-signup">Need an account? Sign up</button>
+      </p>
+    </div>
+
+    <!-- APP -->
+    <div id="view-app" class="hidden">
+      <div class="topbar">
+        <span class="who" id="who"></span>
+        <button class="btn-ghost" id="btn-logout">Sign out</button>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="log">Log Session</div>
+        <div class="tab" data-tab="history">History</div>
+        <div class="tab" data-tab="exercise">By Exercise</div>
+      </div>
+
+      <!-- TAB: LOG -->
+      <div id="tab-log" class="tab-panel">
+        <div class="row">
+          <label class="field-label" for="performed_at">Date &amp; time</label>
+          <input type="datetime-local" id="performed_at">
+        </div>
+
+        <div class="row">
+          <label class="field-label">How did the session feel?</label>
+          <div class="stars" id="rating-stars">
+            <span class="star" data-v="1">&#9733;</span>
+            <span class="star" data-v="2">&#9733;</span>
+            <span class="star" data-v="3">&#9733;</span>
+            <span class="star" data-v="4">&#9733;</span>
+            <span class="star" data-v="5">&#9733;</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="field-label">Exercises</label>
+          <div id="sets-container"></div>
+          <button class="add-link" id="add-set">+ Add another set</button>
+        </div>
+
+        <div class="row">
+          <label class="field-label" for="notes">Notes (optional)</label>
+          <textarea id="notes" placeholder="Felt strong, tweaked form on squats…"></textarea>
+        </div>
+
+        <button class="btn" id="btn-save">Save Session</button>
+        <div class="err" id="save-err"></div>
+      </div>
+
+      <!-- TAB: HISTORY -->
+      <div id="tab-history" class="tab-panel hidden">
+        <div id="history-list"><div class="empty">Loading…</div></div>
+      </div>
+
+      <!-- TAB: BY EXERCISE -->
+      <div id="tab-exercise" class="tab-panel hidden">
+        <div class="row">
+          <label class="field-label" for="ex-picker">Pick an exercise</label>
+          <select id="ex-picker" class="select-styled"></select>
+        </div>
+        <div id="ex-stats"></div>
+        <div id="ex-history"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<datalist id="exercise-options"></datalist>
+<div class="toast" id="toast"></div>
+
+<script src="strength-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="strength.js"></script>
+</body>
+</html>
