@@ -65,7 +65,8 @@
     exercises: [],          // full library (seeds + user)
     exById: {},
     tab: 'templates',
-    active: null            // active session model (see startSession)
+    active: null,           // active session model (see startSession)
+    entered: false          // guard so enterApp() runs once per login
   };
   function unit() { return state.profile.weight_unit || 'lb'; }
   function wStep() { return unit() === 'kg' ? 1.25 : 2.5; }
@@ -205,8 +206,8 @@
 
     sb.auth.onAuthStateChange(function (_evt, session) {
       var u = session && session.user;
-      if (u && (!state.user || state.user.id !== u.id)) { state.user = u; enterApp(); }
-      else if (!u && state.user) { state.user = null; show('view-auth'); }
+      if (u) { state.user = u; enterApp(); }
+      else if (!u && state.user) { state.user = null; state.entered = false; show('view-auth'); }
     });
     sb.auth.getSession().then(function (r) {
       var u = r.data && r.data.session && r.data.session.user;
@@ -215,6 +216,8 @@
   }
 
   function enterApp() {
+    if (state.entered) return;   // one boot per login (auth event + getSession can both fire)
+    state.entered = true;
     show('view-app');
     Promise.all([ensureProfile(), loadExercises()]).then(function () {
       return ensureStarters();
@@ -284,7 +287,7 @@
     $('add-exercise-btn').addEventListener('click', openExerciseForm);
     $('ex-search').addEventListener('input', renderExercises);
 
-    $('session-back').addEventListener('click', function () { overlay('view-session', false); renderTemplatesTab(); });
+    $('session-back').addEventListener('click', function () { stopRest(); overlay('view-session', false); renderTemplatesTab(); });
     $('session-finish').addEventListener('click', finishActive);
     $('progress-back').addEventListener('click', function () { overlay('view-progress', false); });
     $('detail-back').addEventListener('click', function () { overlay('view-detail', false); });
