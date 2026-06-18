@@ -9,6 +9,6 @@
 // rows that belong to the logged-in user.
 // ---------------------------------------------------------------------------
 window.STRENGTH_CONFIG = {
-  SUPABASE_URL: "YOUR_SUPABASE_URL",
-  SUPABASE_ANON_KEY: "YOUR_SUPABASE_ANON_KEY"
+  SUPABASE_URL: "https://pzmmevzevnnpevruzfjt.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_BU29pEtHFtG7D41NC98j1A_FFMc5OAl"
 };
