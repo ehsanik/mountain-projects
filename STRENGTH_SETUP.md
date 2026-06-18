@@ -1,56 +1,73 @@
-# Strength Log — setup (≈5 minutes, one time)
+# Workout Logger — setup
 
-Your training log lives at **`strength.html`** on your existing GitHub Pages
-site. It uses a free [Supabase](https://supabase.com) project for login and
-data storage, so your history syncs across every device behind a real
-email/password login.
+The Workout Logger lives at **`strength.html`** on your GitHub Pages site and
+uses a free [Supabase](https://supabase.com) project (`strength-log`) for login
+and data, so your history syncs across every device behind an email/password
+login.
 
-## 1. Create a free Supabase project
-1. Go to <https://supabase.com> → **Start your project** → sign in with GitHub.
-2. **New project** → give it a name (e.g. `strength-log`), set a database
-   password (save it somewhere), pick a region near you, **Create**.
-3. Wait ~1 minute for it to provision.
+The Supabase project and keys are already wired in (see `strength-config.js`).
+If you ever rebuild the database, re-run the schema below.
 
-## 2. Create the database tables
-1. In the project, open **SQL Editor** → **New query**.
-2. Copy the entire contents of [`strength-schema.sql`](strength-schema.sql),
-   paste it in, and click **Run**. You should see "Success".
+## Database
 
-## 3. Plug in your keys
-1. In Supabase, open **Project Settings → API**.
-2. Copy two values:
-   - **Project URL** (looks like `https://abcd1234.supabase.co`)
-   - **anon / public** API key (a long string)
-3. Open [`strength-config.js`](strength-config.js) and paste them in:
-   ```js
-   window.STRENGTH_CONFIG = {
-     SUPABASE_URL: "https://abcd1234.supabase.co",
-     SUPABASE_ANON_KEY: "eyJ...your-anon-key..."
-   };
-   ```
-   The anon key is **safe to commit publicly** — Row Level Security (set up by
-   the schema) means it can only ever read/write rows owned by the logged-in
-   user.
-4. Commit and push the change. GitHub Pages redeploys automatically.
+In Supabase: **SQL Editor → New query**, paste all of
+[`strength-schema.sql`](strength-schema.sql), and **Run**. It:
 
-## 4. Create your login
-You want this limited to just you. Two options:
+- drops the old v1 tables (`sessions`, `exercise_sets`) if present — they were
+  empty placeholders,
+- creates the v2 model: `profiles`, `exercises`, `templates`,
+  `template_exercises`, `sessions`, `set_logs`,
+- enables **Row Level Security** so every row is visible only to its owner
+  (built-in seed exercises, `user_id = NULL`, are readable by everyone),
+- seeds the built-in exercise library.
 
-- **Easiest:** open `strength.html`, click **"Need an account? Sign up"**,
-  enter your email + a password. (By default Supabase emails a confirmation
-  link — click it, then sign in.)
-- **Or** create the user directly in Supabase: **Authentication → Users →
-  Add user**.
+Running it shows a "destructive operations" warning because it `drop`s the old
+tables and replaces policies — expected and safe on the empty project.
 
-**To keep it private to you:** in Supabase go to **Authentication → Providers
-→ Email** and turn **off** "Allow new users to sign up" after your account
-exists. From then on, only you can log in.
+## Data model (adapted to Supabase)
 
-## Done
-Visit `…/strength.html`, sign in, and start logging. Features:
-- **Log Session** — date/time (defaults to now), a 1–5 star session rating,
-  any number of exercises with weight / reps / set number, and notes.
-- **History** — every past session, newest first, with date, timestamp,
-  rating, and all lifts.
-- **By Exercise** — pick a lift to see its full weight history, your best
-  weight (PR), and when you last did it.
+The build-guide schema assumed a generic `users` table with `BIGINT` ids. Here
+it's mapped to the Supabase reality:
+
+- `user_id` is **`uuid`** referencing `auth.users(id)`, default `auth.uid()`.
+- Access is enforced by **RLS policies**, not an app server.
+- `weight_unit` (lb/kg) is a per-user setting on the **`profiles`** table.
+- Every user-owned table carries `user_id` so RLS stays simple and fast.
+
+Everything else from the guide is preserved: text ranges for targets, `weight`
+as `NUMERIC(6,2)`, `finished_at IS NULL` = in-progress (powers resume), the
+unique constraints that make autosave idempotent, and the indexes.
+
+## Login
+
+1. Open `strength.html`, click **"Need an account? Sign up"**, enter email +
+   password. Supabase emails a confirmation link by default — click it, then
+   sign in.
+2. **To keep it private to you:** in Supabase → **Authentication → Providers →
+   Email**, turn **off** "Allow new users to sign up" after your account exists.
+
+## Features
+
+- **Workouts** — your templates as cards (name, phase, exercise count). Start a
+  template or a freeform session. Create/edit templates (sections, targets,
+  reorder). On first login, two starter templates are created from the seed
+  library.
+- **Active session** — exercises grouped by section, each with set rows
+  (weight + reps steppers, tap-to-type, large done checkbox). Shows the
+  "last time" value inline, marks a PR with ▲, autosaves every change, and
+  resumes exactly where you left off if the tab closes. Optional rest timer
+  from the target rest.
+- **History** — finished sessions by month with a one-line summary; tap for a
+  read-only detail.
+- **Progress** — per exercise: best/last/sessions stats, a top-set-weight line
+  chart, a volume chart, and the raw history.
+- **Exercises** — searchable library grouped by muscle group, with an
+  "Add exercise" form for custom movements.
+- **Settings** (⚙️) — switch weight unit (lb/kg) and sign out.
+
+## Note on starter data
+
+The seed library is the guide's 7 exercises plus common core moves. The two
+starter templates ("Full Body Split", "Upper / Core Split") use those. Lower-
+body exercises aren't seeded yet — add them in the **Exercises** tab and build
+your own splits with the template editor.
