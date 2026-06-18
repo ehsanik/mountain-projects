@@ -48,8 +48,13 @@
     return nums.reduce(function (a, b) { return Math.max(a, +b); }, 0) || dflt;
   }
   function restSeconds(text) {
-    var n = String(text || '').match(/\d+/);
-    return n ? (+n[0]) * 60 : 0;
+    var s = String(text || '');
+    var n = s.match(/\d+/);
+    if (!n) return 0;
+    var v = +n[0];
+    // "45s"/"30 sec" (seconds, no minutes) → seconds; otherwise treat as minutes
+    if (/\d\s*s(ec)?/i.test(s) && !/min/i.test(s)) return v;
+    return v * 60;
   }
   function debounce(fn, ms) {
     var t; return function () { var a = arguments, self = this;
