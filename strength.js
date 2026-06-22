@@ -584,11 +584,16 @@
     renderActive();
   }
 
+  // All set-log writes are funneled through one serial chain. A fast
+  // "type reps → tap done" sequence fires two upserts for the same row; without
+  // ordering they can land out of order and a stale value (e.g. completed:false)
+  // overwrites the newer one. Serializing guarantees last-called wins.
+  var saveChain = Promise.resolve();
   function saveSet(ex, s) {
-    if (!state.active) return;
+    if (!state.active) return saveChain;
     var hasData = (s.weight !== '' && s.weight != null) || (s.reps !== '' && s.reps != null) || s.completed;
-    if (!hasData) return; // don't write empty rows
-    sb.from('set_logs').upsert({
+    if (!hasData) return saveChain; // don't write empty rows
+    var payload = {
       session_id: state.active.session.id,
       exercise_id: ex.exId,
       user_id: state.user.id,
@@ -596,21 +601,28 @@
       weight: (s.weight === '' ? null : s.weight),
       reps: (s.reps === '' ? null : s.reps),
       completed: !!s.completed
-    }, { onConflict: 'session_id,exercise_id,set_number' }).then(function (r) {
-      if (r.error) console.warn('save set failed', r.error.message);
+    };
+    saveChain = saveChain.then(function () {
+      return sb.from('set_logs').upsert(payload, { onConflict: 'session_id,exercise_id,set_number' })
+        .then(function (r) { if (r.error) console.warn('save set failed', r.error.message); },
+              function (e) { console.warn('save set error', e); });
     });
+    return saveChain;
   }
   var saveSetDebounced = debounce(function (ex, s) { saveSet(ex, s); }, 450);
 
   function finishActive() {
     var m = state.active; if (!m) return;
-    sb.from('sessions').update({ finished_at: new Date().toISOString(), notes: m.session.notes || null })
-      .eq('id', m.session.id).then(function () {
-        stopRest();
-        state.active = null;
-        overlay('view-session', false);
-        switchTab('history');
-      });
+    // flush any pending set writes first so finishing can't beat a save
+    saveChain.then(function () {
+      return sb.from('sessions').update({ finished_at: new Date().toISOString(), notes: m.session.notes || null })
+        .eq('id', m.session.id);
+    }).then(function () {
+      stopRest();
+      state.active = null;
+      overlay('view-session', false);
+      switchTab('history');
+    });
   }
 
   /* ---- Rest timer ---- */
