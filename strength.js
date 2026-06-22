@@ -708,7 +708,19 @@
             }).join('') + '</div>';
         });
         if (s.notes) html += '<div class="card"><div class="muted" style="font-size:13px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">Notes</div>' + esc(s.notes) + '</div>';
-        body.innerHTML = html || '<div class="empty">No sets logged.</div>';
+        html = (html || '<div class="empty">No sets logged.</div>') +
+          '<button class="btn danger" id="detail-delete" style="margin-top:18px">Delete this workout</button>';
+        body.innerHTML = html;
+        var del = $('detail-delete');
+        del.addEventListener('click', function () {
+          if (!window.confirm('Delete this workout? This permanently removes the session and all its sets.')) return;
+          del.disabled = true; del.textContent = 'Deleting…';
+          sb.from('sessions').delete().eq('id', id).then(function (r) {
+            if (r.error) { del.disabled = false; del.textContent = 'Delete this workout'; alert('Could not delete: ' + r.error.message); return; }
+            overlay('view-detail', false);
+            renderHistory();
+          });
+        });
       });
   }
 
@@ -812,9 +824,11 @@
    * ----------------------------------------------------------------------- */
   function openSheet(html) {
     var root = $('modal-root');
-    root.innerHTML = '<div class="modal-back"><div class="sheet">' + html + '</div></div>';
+    root.innerHTML = '<div class="modal-back"><div class="sheet">' +
+      '<button class="sheet-close" aria-label="Close">✕</button>' + html + '</div></div>';
     var back = root.querySelector('.modal-back');
     back.addEventListener('click', function (e) { if (e.target === back) closeSheet(); });
+    root.querySelector('.sheet-close').addEventListener('click', closeSheet);
     return root.querySelector('.sheet');
   }
   function closeSheet() { $('modal-root').innerHTML = ''; }
