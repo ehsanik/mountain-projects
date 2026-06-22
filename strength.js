@@ -77,7 +77,7 @@
   function wStep() { return unit() === 'kg' ? 1.25 : 2.5; }
 
   var STARTERS = [
-    { name: 'Full Body Split', phase: 'Month 1', items: [
+    { name: 'Full Body Split', items: [
       { name: 'Dumbbell Bench Press', section: 'UPPER BODY' },
       { name: 'Dumbbell Overhead Press', section: 'UPPER BODY' },
       { name: 'Cable Chest Flys', section: 'UPPER BODY' },
@@ -86,7 +86,7 @@
       { name: 'Hanging Leg Raises', section: 'CORE' },
       { name: 'Plank', section: 'CORE' }
     ] },
-    { name: 'Upper / Core Split', phase: 'Month 1', items: [
+    { name: 'Upper / Core Split', items: [
       { name: 'Dumbbell Bench Press', section: 'UPPER BODY' },
       { name: 'Cable Chest Flys', section: 'UPPER BODY' },
       { name: 'Dumbbell Overhead Press', section: 'UPPER BODY' },
@@ -168,12 +168,12 @@
       });
   }
   function listTemplates() {
-    return sb.from('templates').select('id,name,phase,template_exercises(count)')
+    return sb.from('templates').select('id,name,template_exercises(count)')
       .order('created_at').then(function (r) { return r.data || []; });
   }
   function getTemplate(id) {
     return sb.from('templates')
-      .select('id,name,phase,template_exercises(id,section,position,target_sets,target_reps,target_rest,exercise_id)')
+      .select('id,name,template_exercises(id,section,position,target_sets,target_reps,target_rest,exercise_id)')
       .eq('id', id).single().then(function (r) {
         var t = r.data;
         if (t && t.template_exercises) t.template_exercises.sort(function (a, b) { return a.position - b.position; });
@@ -245,7 +245,7 @@
     var chain = Promise.resolve();
     STARTERS.forEach(function (tpl) {
       chain = chain.then(function () {
-        return sb.from('templates').insert({ user_id: state.user.id, name: tpl.name, phase: tpl.phase })
+        return sb.from('templates').insert({ user_id: state.user.id, name: tpl.name })
           .select('id').single().then(function (r) {
             if (!r.data) return;
             var rows = [];
@@ -327,7 +327,6 @@
         return '<div class="card"><div class="row"><div class="grow">' +
           '<div style="font-size:19px;font-weight:700">' + esc(t.name) + '</div>' +
           '<div class="muted" style="font-size:14px;margin-top:3px">' +
-          (t.phase ? '<span class="pill">' + esc(t.phase) + '</span> &nbsp;' : '') +
           count + ' exercise' + (count === 1 ? '' : 's') + '</div></div>' +
           '<button class="iconbtn" data-edit="' + t.id + '" title="Edit">✏️</button></div>' +
           '<div style="margin-top:12px"><button class="btn" data-start="' + t.id + '">Start workout</button></div></div>';
@@ -426,7 +425,8 @@
 
   function renderActive() {
     var m = state.active; if (!m) return;
-    var html = '';
+    var html = '<label class="field"><span>Workout date</span>' +
+      '<input type="date" id="session-date" value="' + esc(m.session.performed_on) + '" /></label>';
     var lastSection = '__none__';
     m.exercises.forEach(function (ex, idx) {
       if (ex.section && ex.section !== lastSection) {
@@ -447,11 +447,63 @@
     $('session-add-ex').addEventListener('click', function () {
       pickExercise(function (ex) { addExerciseToActive(ex); });
     });
+    var dateEl = $('session-date');
+    if (dateEl) dateEl.addEventListener('change', function () {
+      if (!dateEl.value) return;
+      m.session.performed_on = dateEl.value;
+      $('session-sub').textContent = fmtDateFull(dateEl.value);
+      sb.from('sessions').update({ performed_on: dateEl.value }).eq('id', m.session.id);
+    });
     var notes = $('session-notes');
     if (notes) notes.addEventListener('change', function () {
       m.session.notes = notes.value;
       sb.from('sessions').update({ notes: notes.value }).eq('id', m.session.id);
     });
+    loadExerciseImages(body);
+  }
+
+  // Load the (generated) exercise images a couple at a time with retry — the
+  // image service is slow on first generation and rate-limits big bursts.
+  function loadExerciseImages(container) {
+    var imgs = Array.prototype.slice.call(container.querySelectorAll('img[data-src]'));
+    function start(im) {
+      im.onload = function () { im.onload = im.onerror = null; pump(); };
+      im.onerror = function () {
+        var t = (+im.getAttribute('data-try') || 0);
+        if (t < 2) { im.setAttribute('data-try', t + 1);
+          setTimeout(function () { im.src = im.getAttribute('data-src') + '&r=' + (t + 1); }, 1500 * (t + 1)); }
+        else { im.onload = im.onerror = null; im.style.display = 'none'; pump(); }
+      };
+      im.src = im.getAttribute('data-src');
+    }
+    var i = 0;
+    function pump() { if (i < imgs.length) start(imgs[i++]); }
+    pump(); pump(); // two concurrent load chains
+  }
+
+  // Real demonstration photos for the built-in exercises (free-exercise-db).
+  var IMG_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+  var IMG_MAP = {
+    'Dumbbell Bench Press': 'Dumbbell_Bench_Press',
+    'Bent Over Tricep Kickbacks': 'Tricep_Dumbbell_Kickback',
+    'Dumbbell Overhead Press': 'Dumbbell_Shoulder_Press',
+    'Front to Lateral Raise': 'Side_Lateral_Raise',
+    'Cable Chest Flys': 'Cable_Crossover',
+    'Cable Tricep Extension': 'Triceps_Pushdown',
+    'Hanging Leg Raises': 'Hanging_Leg_Raise',
+    'Plank': 'Plank',
+    'Russian Twist': 'Russian_Twist',
+    'Leg Raise': 'Flat_Bench_Lying_Leg_Raise',
+    'Side Plank': 'Side_Bridge',
+    'Sit Ups': 'Sit-Up'
+  };
+  // Image for an exercise: a real photo when we have one, else a generated
+  // illustration from the name (covers custom exercises). Hidden if it fails.
+  function exerciseImg(name) {
+    if (IMG_MAP[name]) return IMG_BASE + IMG_MAP[name] + '/0.jpg';
+    var seed = 0; for (var i = 0; i < name.length; i++) seed = (seed * 31 + name.charCodeAt(i)) % 100000;
+    var q = encodeURIComponent(name + ', gym strength exercise, clean illustration, plain background');
+    return 'https://image.pollinations.ai/prompt/' + q + '?width=600&height=300&nologo=true&seed=' + seed;
   }
 
   function exerciseCardHtml(ex, idx) {
@@ -459,6 +511,7 @@
     var target = ex.target ? (ex.target.target_sets || '?') + ' × ' + (ex.target.target_reps || '?') : '';
     var rows = ex.sets.map(function (s) { return setRowHtml(idx, s, ex.last.byNum[s.set_number]); }).join('');
     return '<div class="ex-card' + (allset ? ' allset' : '') + '" data-card="' + idx + '">' +
+      '<img class="ex-img" data-src="' + exerciseImg(ex.name) + '" alt="' + esc(ex.name) + '" />' +
       '<div class="row"><div class="grow"><div class="exname">' + esc(ex.name) + '</div>' +
       (target ? '<div class="extarget">Target ' + esc(target) + (ex.target.target_rest ? ' · rest ' + esc(ex.target.target_rest) : '') + '</div>' : '') +
       '</div><button class="iconbtn" data-prog="' + ex.exId + '" title="Progress">📈</button></div>' +
@@ -672,16 +725,59 @@
           var exCount = {}, setCount = (s.set_logs || []).length;
           (s.set_logs || []).forEach(function (sl) { exCount[sl.exercise_id] = 1; });
           var nEx = Object.keys(exCount).length;
-          html += '<button class="card tap" data-detail="' + s.id + '"><div class="row"><div class="grow">' +
+          html += '<div class="card">' +
+            '<button class="histtap" data-detail="' + s.id + '"><div class="row"><div class="grow">' +
             '<div style="font-weight:700">' + fmtDate(s.performed_on) +
             (s.templates ? ' · ' + esc(s.templates.name) : ' · Freeform') + '</div>' +
             '<div class="muted" style="font-size:14px;margin-top:2px">' + nEx + ' exercise' + (nEx === 1 ? '' : 's') +
-            ', ' + setCount + ' set' + (setCount === 1 ? '' : 's') + '</div></div><div class="faint">›</div></div></button>';
+            ', ' + setCount + ' set' + (setCount === 1 ? '' : 's') + '</div></div><div class="faint">›</div></div></button>' +
+            '<button class="btn small secondary" data-export="' + s.id + '" style="width:100%;margin-top:10px">⤓ Export for coach</button>' +
+            '</div>';
         });
         box.innerHTML = html;
         box.querySelectorAll('[data-detail]').forEach(function (b) {
           b.addEventListener('click', function () { openDetail(+b.getAttribute('data-detail')); });
         });
+        box.querySelectorAll('[data-export]').forEach(function (b) {
+          b.addEventListener('click', function () { exportSession(+b.getAttribute('data-export')); });
+        });
+      });
+  }
+
+  // Build a readable text log for a session and download it (+ copy to clipboard).
+  function exportSession(id) {
+    sb.from('sessions')
+      .select('performed_on,notes,templates(name),set_logs(exercise_id,set_number,weight,reps,completed)')
+      .eq('id', id).single().then(function (r) {
+        var s = r.data; if (!s) return;
+        var u = unit();
+        var byEx = {};
+        (s.set_logs || []).forEach(function (sl) { (byEx[sl.exercise_id] = byEx[sl.exercise_id] || []).push(sl); });
+        var lines = [];
+        lines.push('Workout — ' + fmtDateFull(s.performed_on) + (s.templates ? ' (' + s.templates.name + ')' : ' (Freeform)'));
+        lines.push('');
+        Object.keys(byEx).forEach(function (exId) {
+          var ex = state.exById[exId] || { name: 'Exercise' };
+          lines.push(ex.name);
+          byEx[exId].sort(function (a, b) { return a.set_number - b.set_number; }).forEach(function (st) {
+            lines.push('  Set ' + st.set_number + ': ' +
+              (st.weight != null ? fmtW(st.weight) + ' ' + u : '—') + ' × ' + (st.reps != null ? st.reps : '—') +
+              (st.completed ? '  (done)' : ''));
+          });
+          lines.push('');
+        });
+        if (s.notes) { lines.push('Notes: ' + s.notes); lines.push(''); }
+        lines.push('— exported from Workout Logger');
+        var text = lines.join('\n');
+        var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = 'workout-' + s.performed_on + '.txt';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {}, function () {});
+        }
       });
   }
 
@@ -902,25 +998,21 @@
   /* ----------------------------------------------------------------------- *
    * Template editor
    * ----------------------------------------------------------------------- */
-  var PHASES = ['', 'Month 1', 'Month 2'];
   function openTemplateEditor(templateId) {
-    var loader = templateId ? getTemplate(templateId) : Promise.resolve({ name: '', phase: '', template_exercises: [] });
+    var loader = templateId ? getTemplate(templateId) : Promise.resolve({ name: '', template_exercises: [] });
     loader.then(function (t) {
       var items = (t.template_exercises || []).map(function (te) {
         return { exercise_id: te.exercise_id, name: (state.exById[te.exercise_id] || {}).name || 'Exercise',
           section: te.section || '', target_sets: te.target_sets || '3',
           target_reps: te.target_reps || '10-15', target_rest: te.target_rest || '2-3 min' };
       });
-      var draft = { id: templateId, name: t.name || '', phase: t.phase || '', items: items };
+      var draft = { id: templateId, name: t.name || '', items: items };
       paintEditor(draft);
     });
   }
   function paintEditor(draft) {
     var html = '<h2>' + (draft.id ? 'Edit template' : 'New template') + '</h2>' +
       '<label class="field"><span>Name</span><input id="te-name" value="' + esc(draft.name) + '" placeholder="e.g. Full Body Split" /></label>' +
-      '<label class="field"><span>Phase</span><select id="te-phase">' +
-        PHASES.map(function (p) { return '<option value="' + p + '"' + (draft.phase === p ? ' selected' : '') + '>' + (p || 'None') + '</option>'; }).join('') +
-      '</select></label>' +
       '<div class="section-head" style="margin-top:6px">Exercises</div><div id="te-items"></div>' +
       '<button class="btn ghost" id="te-add" style="width:100%;margin:6px 0 16px">+ Add exercise</button>' +
       '<div id="te-msg" class="msg"></div>' +
@@ -962,7 +1054,6 @@
     paintItems();
 
     sheet.querySelector('#te-name').addEventListener('change', function (e) { draft.name = e.target.value; });
-    sheet.querySelector('#te-phase').addEventListener('change', function (e) { draft.phase = e.target.value; });
     sheet.querySelector('#te-cancel').addEventListener('click', closeSheet);
     sheet.querySelector('#te-add').addEventListener('click', function () {
       // re-sync field values before re-render
@@ -984,10 +1075,9 @@
   }
 
   function saveTemplate(draft) {
-    var phase = draft.phase || null;
     var upsertTpl = draft.id
-      ? sb.from('templates').update({ name: draft.name, phase: phase }).eq('id', draft.id).then(function () { return draft.id; })
-      : sb.from('templates').insert({ user_id: state.user.id, name: draft.name, phase: phase })
+      ? sb.from('templates').update({ name: draft.name }).eq('id', draft.id).then(function () { return draft.id; })
+      : sb.from('templates').insert({ user_id: state.user.id, name: draft.name })
           .select('id').single().then(function (r) { return r.data.id; });
     return upsertTpl.then(function (tid) {
       return sb.from('template_exercises').delete().eq('template_id', tid).then(function () {
