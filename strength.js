@@ -731,8 +731,10 @@
             (s.templates ? ' · ' + esc(s.templates.name) : ' · Freeform') + '</div>' +
             '<div class="muted" style="font-size:14px;margin-top:2px">' + nEx + ' exercise' + (nEx === 1 ? '' : 's') +
             ', ' + setCount + ' set' + (setCount === 1 ? '' : 's') + '</div></div><div class="faint">›</div></div></button>' +
-            '<button class="btn small secondary" data-export="' + s.id + '" style="width:100%;margin-top:10px">⤓ Export for coach</button>' +
-            '</div>';
+            '<div class="row" style="gap:8px;margin-top:10px">' +
+            '<button class="btn small secondary" data-export="' + s.id + '" style="flex:1">⤓ Export</button>' +
+            '<button class="btn small secondary" data-email="' + s.id + '" style="flex:1">✉️ Email</button>' +
+            '</div></div>';
         });
         box.innerHTML = html;
         box.querySelectorAll('[data-detail]').forEach(function (b) {
@@ -741,48 +743,76 @@
         box.querySelectorAll('[data-export]').forEach(function (b) {
           b.addEventListener('click', function () { exportSession(+b.getAttribute('data-export')); });
         });
+        box.querySelectorAll('[data-email]').forEach(function (b) {
+          b.addEventListener('click', function () { emailSession(+b.getAttribute('data-email')); });
+        });
       });
   }
 
   // Build a readable text log for a session and download it (+ copy to clipboard).
-  function exportSession(id) {
+  function fetchSession(id, cb) {
     sb.from('sessions')
       .select('performed_on,notes,templates(name),set_logs(exercise_id,set_number,weight,reps,completed)')
-      .eq('id', id).single().then(function (r) {
-        var s = r.data; if (!s) return;
-        var u = unit();
-        var byEx = {}, order = [];
-        (s.set_logs || []).forEach(function (sl) {
-          if (!byEx[sl.exercise_id]) { byEx[sl.exercise_id] = []; order.push(sl.exercise_id); }
-          byEx[sl.exercise_id].push(sl);
-        });
-        var lines = [];
-        lines.push('Workout - ' + fmtDateFull(s.performed_on) + (s.templates ? ' (' + s.templates.name + ')' : ' (Freeform)'));
-        lines.push('');
-        order.forEach(function (exId) {
-          var ex = state.exById[exId] || { name: 'Exercise' };
-          lines.push(ex.name);
-          byEx[exId].sort(function (a, b) { return a.set_number - b.set_number; }).forEach(function (st) {
-            lines.push('  Set ' + st.set_number + ': ' +
-              (st.weight != null ? fmtW(st.weight) + ' ' + u : '-') + ' x ' + (st.reps != null ? st.reps : '-') +
-              (st.completed ? '  (done)' : ''));
-          });
-          lines.push('');
-        });
-        if (s.notes) { lines.push('Notes: ' + s.notes); lines.push(''); }
-        lines.push('- exported from Workout Logger');
-        // Prefix a UTF-8 BOM so editors that default to Latin-1 still render it correctly.
-        var text = lines.join('\n');
-        var blob = new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url; a.download = 'workout-' + s.performed_on + '.txt';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(function () {}, function () {});
-        }
+      .eq('id', id).single().then(function (r) { if (r.data) cb(r.data); });
+  }
+
+  // Plain-ASCII readable log for a session (coach-friendly, encoding-safe).
+  function sessionText(s) {
+    var u = unit();
+    var byEx = {}, order = [];
+    (s.set_logs || []).forEach(function (sl) {
+      if (!byEx[sl.exercise_id]) { byEx[sl.exercise_id] = []; order.push(sl.exercise_id); }
+      byEx[sl.exercise_id].push(sl);
+    });
+    var lines = [];
+    lines.push('Workout - ' + fmtDateFull(s.performed_on) + (s.templates ? ' (' + s.templates.name + ')' : ' (Freeform)'));
+    lines.push('');
+    order.forEach(function (exId) {
+      var ex = state.exById[exId] || { name: 'Exercise' };
+      lines.push(ex.name);
+      byEx[exId].sort(function (a, b) { return a.set_number - b.set_number; }).forEach(function (st) {
+        lines.push('  Set ' + st.set_number + ': ' +
+          (st.weight != null ? fmtW(st.weight) + ' ' + u : '-') + ' x ' + (st.reps != null ? st.reps : '-') +
+          (st.completed ? '  (done)' : ''));
       });
+      lines.push('');
+    });
+    if (s.notes) { lines.push('Notes: ' + s.notes); lines.push(''); }
+    lines.push('- exported from Workout Logger');
+    return lines.join('\n');
+  }
+
+  function exportSession(id) {
+    fetchSession(id, function (s) {
+      var text = sessionText(s);
+      // Prefix a UTF-8 BOM so editors that default to Latin-1 still render it correctly.
+      var blob = new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = 'workout-' + s.performed_on + '.txt';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {}, function () {});
+      }
+    });
+  }
+
+  function emailSession(id) {
+    fetchSession(id, function (s) {
+      var text = sessionText(s);
+      var subject = 'Workout - ' + fmtDateFull(s.performed_on);
+      // Phone: share the actual .txt file (Mail attaches it). Desktop: fall back
+      // to a new email with the log in the body (mailto can't attach files).
+      try {
+        var file = new File(['﻿' + text], 'workout-' + s.performed_on + '.txt', { type: 'text/plain' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: subject, text: subject }).catch(function () {});
+          return;
+        }
+      } catch (e) { /* fall through to mailto */ }
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(text);
+    });
   }
 
   function openDetail(id) {
