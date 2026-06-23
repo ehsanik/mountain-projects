@@ -751,25 +751,29 @@
       .eq('id', id).single().then(function (r) {
         var s = r.data; if (!s) return;
         var u = unit();
-        var byEx = {};
-        (s.set_logs || []).forEach(function (sl) { (byEx[sl.exercise_id] = byEx[sl.exercise_id] || []).push(sl); });
+        var byEx = {}, order = [];
+        (s.set_logs || []).forEach(function (sl) {
+          if (!byEx[sl.exercise_id]) { byEx[sl.exercise_id] = []; order.push(sl.exercise_id); }
+          byEx[sl.exercise_id].push(sl);
+        });
         var lines = [];
-        lines.push('Workout — ' + fmtDateFull(s.performed_on) + (s.templates ? ' (' + s.templates.name + ')' : ' (Freeform)'));
+        lines.push('Workout - ' + fmtDateFull(s.performed_on) + (s.templates ? ' (' + s.templates.name + ')' : ' (Freeform)'));
         lines.push('');
-        Object.keys(byEx).forEach(function (exId) {
+        order.forEach(function (exId) {
           var ex = state.exById[exId] || { name: 'Exercise' };
           lines.push(ex.name);
           byEx[exId].sort(function (a, b) { return a.set_number - b.set_number; }).forEach(function (st) {
             lines.push('  Set ' + st.set_number + ': ' +
-              (st.weight != null ? fmtW(st.weight) + ' ' + u : '—') + ' × ' + (st.reps != null ? st.reps : '—') +
+              (st.weight != null ? fmtW(st.weight) + ' ' + u : '-') + ' x ' + (st.reps != null ? st.reps : '-') +
               (st.completed ? '  (done)' : ''));
           });
           lines.push('');
         });
         if (s.notes) { lines.push('Notes: ' + s.notes); lines.push(''); }
-        lines.push('— exported from Workout Logger');
+        lines.push('- exported from Workout Logger');
+        // Prefix a UTF-8 BOM so editors that default to Latin-1 still render it correctly.
         var text = lines.join('\n');
-        var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        var blob = new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' });
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url; a.download = 'workout-' + s.performed_on + '.txt';
